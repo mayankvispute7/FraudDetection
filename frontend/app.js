@@ -4,7 +4,9 @@
 // =============================================
 
 // Resilient API Target Resolution:
-// Handles local file://, dev servers (5000, 5500, 3000), unified FastAPI, and cloud domains (Render/Railway).
+// Default live cloud backend on Render:
+const DEFAULT_CLOUD_API = "https://frauddetection-wvlm.onrender.com";
+
 function resolveInitialApiUrl() {
     try {
         const stored = localStorage.getItem('sentinelx_api_url');
@@ -19,24 +21,30 @@ function resolveInitialApiUrl() {
         const port = window.location.port;
         const origin = window.location.origin;
 
-        // If opened as local file:///
+        // 1. If opened as local file:///
         if (protocol === 'file:' || origin === 'null' || !origin || origin.startsWith('file:')) {
             return 'http://127.0.0.1:8000';
         }
 
-        // If running locally (localhost, 127.0.0.1)
+        // 2. If running locally (localhost, 127.0.0.1)
         if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
             if (port === '8000') return origin;
             return 'http://127.0.0.1:8000';
         }
 
-        // If running in cloud production (Render, Railway, custom domain)
-        if (origin && !origin.startsWith('file:') && origin !== 'null') {
+        // 3. If running directly on Render (unified deployment)
+        if (hostname.includes('onrender.com')) {
             return origin;
+        }
+
+        // 4. If running on Vercel, Netlify, GitHub Pages, or any separate frontend
+        // Automatically connects to your live Render backend!
+        if (origin && !origin.startsWith('file:') && origin !== 'null') {
+            return DEFAULT_CLOUD_API;
         }
     }
 
-    return 'http://127.0.0.1:8000';
+    return DEFAULT_CLOUD_API;
 }
 
 let API_URL = resolveInitialApiUrl();
