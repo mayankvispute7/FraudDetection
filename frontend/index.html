@@ -3,123 +3,895 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SentinelX Command Center</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SentinelX — AI-Powered Cyber Crime Analysis Engine</title>
+    <meta name="description" content="SentinelX is an enterprise AI-powered real-time cyber crime analysis engine detecting financial fraud using XGBoost ML models.">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
-    <style>
-        .fade-in { animation: fadeIn 0.5s ease-in-out; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+    <link rel="stylesheet" href="styles.css?v=6.0">
 </head>
-<body class="bg-slate-950 text-slate-200 font-sans min-h-screen p-6 selection:bg-blue-500/30">
+<body>
 
-    <header class="mb-10 text-center fade-in">
-        <h1 class="text-5xl font-extrabold tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-indigo-600 mb-2">
-            SENTINEL<span class="text-slate-100">X</span>
-        </h1>
-        <p class="text-slate-400 text-sm tracking-widest uppercase">Real-Time Fraud Intelligence Engine</p>
-    </header>
+    <!-- Animated Background Grid -->
+    <div class="bg-grid"></div>
+    <div class="bg-glow bg-glow-1"></div>
+    <div class="bg-glow bg-glow-2"></div>
 
-    <div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        <div class="space-y-6 fade-in" style="animation-delay: 0.1s;">
-            
-            <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-6 rounded-2xl shadow-2xl">
-                <h2 class="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></span>
-                    API Injector
-                </h2>
-                
-                <div class="space-y-4">
-                    <div>
-                        <label class="block text-xs text-slate-400 mb-1">Transaction Amount ($)</label>
-                        <input type="number" id="txAmount" value="4500.00" class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500 transition-colors">
-                    </div>
-                    <button onclick="submitTransaction()" id="submitBtn" class="w-full relative group overflow-hidden bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg shadow-[0_0_15px_rgba(37,99,235,0.4)] transition-all duration-300">
-                        <span id="btnText">Inject Transaction Pattern</span>
-                        <svg id="btnSpinner" class="hidden animate-spin h-5 w-5 text-white mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    </button>
-                </div>
+    <!-- Top Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-brand">
+            <div class="brand-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="url(#brandGrad)" stroke-width="2" stroke-linecap="round">
+                    <defs><linearGradient id="brandGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#06b6d4"/><stop offset="100%" stop-color="#8b5cf6"/></linearGradient></defs>
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+                    <path d="M9 12l2 2 4-4" stroke="#22d3ee"/>
+                </svg>
             </div>
-
-            <div id="resultCard" class="hidden bg-slate-800/50 backdrop-blur-md border p-6 rounded-2xl shadow-2xl transition-all duration-500">
-                <h3 class="text-sm text-slate-400 mb-1">Transaction ID: <span id="resId" class="text-slate-200 font-mono"></span></h3>
-                <div class="flex items-center justify-between mb-4">
-                    <p class="text-2xl font-bold" id="resAction"></p>
-                    <span id="resBadge" class="px-3 py-1 text-xs font-bold rounded-full"></span>
-                </div>
-                
-                <div class="w-full bg-slate-900 rounded-full h-2.5 mb-1 overflow-hidden">
-                    <div id="probBar" class="h-2.5 rounded-full transition-all duration-1000 w-0"></div>
-                </div>
-                <p class="text-right text-xs text-slate-400">Probability: <span id="resProb"></span></p>
+            <div>
+                <h1 class="brand-name">SENTINEL<span class="brand-accent">X</span></h1>
+                <p class="brand-tagline">AI-Powered Cyber Crime Analysis</p>
             </div>
         </div>
 
-        <div class="lg:col-span-2 space-y-6 fade-in" style="animation-delay: 0.2s;">
-            
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-4 rounded-xl text-center shadow-lg">
-                    <p class="text-xs text-slate-400 uppercase tracking-wide">Total Volume</p>
-                    <p id="kpiTotal" class="text-2xl font-bold text-slate-100 mt-1">-</p>
-                </div>
-                <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-4 rounded-xl text-center shadow-lg">
-                    <p class="text-xs text-slate-400 uppercase tracking-wide">Fraud Flags</p>
-                    <p id="kpiFraud" class="text-2xl font-bold text-red-400 mt-1">-</p>
-                </div>
-                <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-4 rounded-xl text-center shadow-lg">
-                    <p class="text-xs text-slate-400 uppercase tracking-wide">Avg Risk Score</p>
-                    <p id="kpiAvgRisk" class="text-2xl font-bold text-yellow-400 mt-1">-</p>
-                </div>
-                <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-4 rounded-xl text-center shadow-lg">
-                    <p class="text-xs text-slate-400 uppercase tracking-wide">API Latency</p>
-                    <p id="kpiLatency" class="text-2xl font-bold text-green-400 mt-1">~12ms</p>
-                </div>
-            </div>
+        <!-- Navigation Tabs -->
+        <div class="nav-tabs">
+            <button class="nav-tab active" onclick="switchView('live')" id="tabLive">
+                <span>🛰️ Live SOC Telemetry</span>
+            </button>
+            <button class="nav-tab" onclick="switchView('batch')" id="tabBatch">
+                <span>📂 Batch CSV Forensic Audit</span>
+                <span class="nav-tab-badge">creditcard.csv</span>
+            </button>
+        </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-lg h-64 flex items-center justify-center">
-                    <canvas id="riskChart"></canvas>
-                </div>
-                <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 p-4 rounded-xl shadow-lg h-64 flex items-center justify-center">
-                    <canvas id="trendChart"></canvas>
-                </div>
+        <div class="nav-status">
+            <div class="status-indicator" id="apiStatus">
+                <span class="status-dot offline"></span>
+                <span class="status-text">Connecting...</span>
             </div>
+            <div class="nav-badge">v1.0 — XGBoost Engine</div>
+        </div>
+    </nav>
 
-            <div class="bg-slate-800/50 backdrop-blur-md border border-slate-700 rounded-xl shadow-lg overflow-hidden">
-                <div class="px-6 py-4 border-b border-slate-700 flex justify-between items-center">
-                    <h2 class="text-sm font-semibold text-slate-200">Live Decision Log</h2>
-                    <span class="flex h-3 w-3 relative">
-                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3 bg-green-500"></span>
-                    </span>
+    <!-- Main Container -->
+    <main class="dashboard">
+
+        <!-- ========================================== -->
+        <!-- VIEW 1: LIVE SOC TELEMETRY DASHBOARD       -->
+        <!-- ========================================== -->
+        <div id="viewLive" class="view-section active">
+
+            <!-- SECTION 1: COMPACT EXECUTIVE KPI TELEMETRY STRIP -->
+            <section class="kpi-row">
+                <div class="kpi-card kpi-card-total" id="kpiTotalCard">
+                    <div class="kpi-icon kpi-icon-blue">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Total Cyber Events</span>
+                        <span class="kpi-value" id="kpiTotal">0</span>
+                        <span class="kpi-subtag">⚡ Live Telemetry</span>
+                    </div>
                 </div>
-                <div class="overflow-y-auto max-h-48">
-                    <table class="w-full text-sm text-left text-slate-400">
-                        <thead class="text-xs uppercase bg-slate-900/50 text-slate-500 sticky top-0">
+                <div class="kpi-card kpi-card-threat" id="kpiFraudCard">
+                    <div class="kpi-icon kpi-icon-red">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Threats Blocked</span>
+                        <span class="kpi-value kpi-value-red" id="kpiFraud">0</span>
+                        <span class="kpi-subtag subtag-red">🚨 Flagged Criminals</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-card-risk" id="kpiRiskCard">
+                    <div class="kpi-icon kpi-icon-amber">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Avg Threat Score</span>
+                        <span class="kpi-value kpi-value-amber" id="kpiAvgRisk">0.0000</span>
+                        <span class="kpi-subtag subtag-amber">📊 Threshold: 0.50</span>
+                    </div>
+                </div>
+                <div class="kpi-card kpi-card-latency" id="kpiLatencyCard">
+                    <div class="kpi-icon kpi-icon-green">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                    </div>
+                    <div class="kpi-content">
+                        <span class="kpi-label">Detection Latency</span>
+                        <span class="kpi-value kpi-value-green" id="kpiLatency">11 ms</span>
+                        <span class="kpi-subtag subtag-green">⚡ Sub-15ms Target</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- SECTION 2: SYNCHRONIZED SOC COCKPIT (Left Controller + Right Live Visualizations in Same Viewport) -->
+            <section class="soc-cockpit-grid">
+
+                <!-- LEFT COLUMN: Interactive Attack Injection & Real-Time Verdict Console -->
+                <div class="cockpit-col-controller">
+
+                    <!-- Attack Simulator Controller Panel -->
+                    <div class="panel analyzer-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <span class="panel-dot pulse-cyan"></span>
+                                Cyber Crime Attack Simulator
+                            </div>
+                            <span class="panel-subtitle">Real-time ML Forensic Evaluation</span>
+                        </div>
+                        <div class="panel-body">
+
+                            <!-- Step 1: Select Scenario Grid -->
+                            <div class="input-group" style="margin-bottom: 0.75rem;">
+                                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.4rem;">
+                                    <label class="input-label" style="margin-bottom:0;">1. Select Attack / Defense Vector</label>
+                                    <span style="color:var(--cyan); font-size:0.68rem; font-weight:700;">6 Vectors</span>
+                                </div>
+                                <div class="preset-pill-grid">
+                                    <button type="button" class="preset-pill active" data-scenario="safe_pattern" onclick="selectScenarioCard('safe_pattern', this)">
+                                        <span class="preset-icon">🛡️</span>
+                                        <div class="preset-text">
+                                            <span class="preset-title">Normal Purchase</span>
+                                            <span class="preset-sub">$42.50 • Legitimate</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-scenario="card_skimming" onclick="selectScenarioCard('card_skimming', this)">
+                                        <span class="preset-icon">💳</span>
+                                        <div class="preset-text">
+                                            <span class="preset-title">Card Skimming</span>
+                                            <span class="preset-sub">$1,450 • Clone/Travel</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-scenario="carding_bot" onclick="selectScenarioCard('carding_bot', this)">
+                                        <span class="preset-icon">🤖</span>
+                                        <div class="preset-text">
+                                            <span class="preset-title">Carding Bot</span>
+                                            <span class="preset-sub">$0.99 • Micro-Auth</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-scenario="identity_theft" onclick="selectScenarioCard('identity_theft', this)">
+                                        <span class="preset-icon">🕵️</span>
+                                        <div class="preset-text">
+                                            <span class="preset-title">Identity Theft</span>
+                                            <span class="preset-sub">$3,850 • ATO Breach</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-scenario="money_laundering" onclick="selectScenarioCard('money_laundering', this)">
+                                        <span class="preset-icon">💰</span>
+                                        <div class="preset-text">
+                                            <span class="preset-title">Money Laundering</span>
+                                            <span class="preset-sub">$9,850 • Smurfing</span>
+                                        </div>
+                                    </button>
+                                    <button type="button" class="preset-pill" data-scenario="random_pattern" onclick="selectScenarioCard('random_pattern', this)">
+                                        <span class="preset-icon">🎲</span>
+                                        <div class="preset-text">
+                                            <span class="preset-title">Live Payment Feed</span>
+                                            <span class="preset-sub">Stochastic Stream</span>
+                                        </div>
+                                    </button>
+                                </div>
+
+                                <!-- Dynamic Scenario Detail Banner (Fully visible, never cut off) -->
+                                <div class="scenario-context-strip" id="scenarioContextStrip">
+                                    <span class="context-tag badge-safe" id="contextTag">🛡️ LEGITIMATE</span>
+                                    <span class="context-desc" id="contextDesc">David Miller ($42.50) — Tests authentic pass-through with balanced Gaussian PCA telemetry.</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Amount Input & Submit Action (Combined Side-by-Side Row) -->
+                            <div class="input-group" style="margin-bottom: 0;">
+                                <div class="simulator-action-row">
+                                    <div class="amount-field-col">
+                                        <label class="input-label" for="txAmount" style="margin-bottom: 0.25rem;">2. Transaction Amount ($)</label>
+                                        <div class="amount-input-wrap">
+                                            <span class="currency-prefix">$</span>
+                                            <input type="number" id="txAmount" class="input-field amount-input" value="42.50" step="0.01" min="0" oninput="onAmountChanged(this.value)">
+                                        </div>
+                                    </div>
+                                    <div class="action-btn-col">
+                                        <label class="input-label" style="margin-bottom: 0.25rem;">&nbsp;</label>
+                                        <button id="submitBtn" class="btn-primary submit-action-btn" onclick="submitTransaction()">
+                                            <span id="btnText" class="btn-text">
+                                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                                Run AI Threat Analysis
+                                            </span>
+                                            <span id="btnSpinner" class="btn-spinner hidden"></span>
+                                        </button>
+                                    </div>
+                                </div>
+                                <p class="amount-helper" id="amountModeHelper" style="font-size:0.72rem; color:#94a3b8; margin-top:0.35rem; line-height:1.35;">
+                                    ✅ Mode: <strong style="color:#34d399;">Normal Purchase</strong>. Baseline telemetry will be <strong style="color:#34d399;">APPROVED</strong>. Select an attack preset above to test threat blocking.
+                                </p>
+                            </div>
+
+                            <!-- System Scanning Progress State -->
+                            <div id="systemScanningStatus" class="scanning-status hidden">
+                                <div class="scanner-track"><div class="scanner-pulse"></div></div>
+                                <div class="scanning-info">
+                                    <span class="pulse-cyan panel-dot"></span>
+                                    <span id="scanningText" class="scanning-text">Analyzing transaction telemetry across 28 PCA dimensions...</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Decision Result Card with Explainer (Directly beneath controller, fits in viewport) -->
+                    <div id="resultCard" class="result-card">
+                        <div class="result-header">
+                            <div style="display:flex; align-items:center; gap:0.5rem;">
+                                <span class="result-title">Forensic AI Decision Verdict</span>
+                                <span class="model-tag">XGBoost v1.0</span>
+                            </div>
+                            <span class="result-id" id="resultTxId">#PREVIEW</span>
+                        </div>
+
+                        <div class="result-body">
+                            <div class="result-action" id="resultAction" style="color: #10b981;">ALLOW & PASS</div>
+                            <div class="result-level" id="resultRiskLevel" style="background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3);">LOW THREAT</div>
+                        </div>
+
+                        <div class="result-meter">
+                            <div class="meter-bar">
+                                <div class="meter-fill" id="resultMeterFill" style="width: 1.2%; background: linear-gradient(90deg, #10b981, #06b6d4);"></div>
+                            </div>
+                            <span class="meter-value" id="resultProb">0.01%</span>
+                        </div>
+
+                        <!-- Crime Vector Badge -->
+                        <div class="result-vector-row" id="resultVectorRow">
+                            <span class="vector-label">Identified Vector:</span>
+                            <span class="vector-value" id="resultVector" style="color:#34d399;">🛡️ Legitimate Cardholder Transaction</span>
+                        </div>
+
+                        <!-- Reasoning -->
+                        <div class="result-reason-box" id="resultReasonBox">
+                            <span class="reason-label">Key Forensic Indicators:</span>
+                            <p class="reason-text" id="resultReasonText">All 28 dimensional PCA components align with normal cardholder behavioral baselines (within ±0.4σ bounds).</p>
+                        </div>
+
+                        <!-- What to Explain to Sir Box -->
+                        <div class="sir-explain-box" id="sirExplainBox">
+                            <div class="sir-explain-header">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                                <span>What to tell your Professor / Sir:</span>
+                            </div>
+                            <p class="sir-explain-text" id="sirExplainText">
+                                "Sir, when an authorized customer makes an everyday purchase ($42.50), all 28 PCA features hover around zero. SentinelX calculates a near-zero threat score (0.01%) and APPROVES the transaction without causing friction, avoiding the $443B false decline trap."
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- RIGHT COLUMN: Real-Time Live Visualizations & Forensic Dossier (Simultaneous Live View) -->
+                <div class="cockpit-col-telemetry">
+
+                    <!-- Visual 1: Real-Time Threat Velocity & Anomaly Trendline (Directly across from button!) -->
+                    <div class="panel analytics-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <span class="panel-dot pulse-blue"></span>
+                                Real-Time Threat Velocity & Trendline (Live)
+                            </div>
+                            <div class="trend-live-tag">
+                                <span class="pulse-cyan panel-dot"></span>
+                                <span>Rolling Telemetry Stream (3s)</span>
+                            </div>
+                        </div>
+                        <div class="panel-body">
+                            <div class="trend-chart-container" style="height: 165px;">
+                                <canvas id="trendChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Visual 2: Threat Distribution Matrix & Attack Breakdown -->
+                    <div class="panel analytics-panel">
+                        <div class="panel-header">
+                            <div class="panel-title">
+                                <span class="panel-dot pulse-purple"></span>
+                                Threat Distribution & Attack Vectors
+                            </div>
+                            <span class="panel-subtitle">Safe vs. Cyber Threats Detected</span>
+                        </div>
+                        <div class="panel-body analytics-split-body">
+                            <!-- Doughnut Chart Container -->
+                            <div class="analytics-chart-wrap" style="height: 145px;">
+                                <canvas id="riskChart"></canvas>
+                            </div>
+                            <!-- Category Progress Bars -->
+                            <div class="analytics-categories-wrap">
+                                <div class="categories-subhead">
+                                    <span>Vector Breakdown</span>
+                                    <span class="cat-live-badge">Real-Time</span>
+                                </div>
+                                <div class="crime-types-list">
+                                    <div class="crime-type">
+                                        <div class="crime-type-header">
+                                            <span class="crime-type-icon" style="color: #ef4444;">🚨</span>
+                                            <span>Financial Fraud</span>
+                                            <span class="crime-type-count" id="crimeFinancial">0</span>
+                                        </div>
+                                        <div class="crime-type-bar"><div class="crime-type-fill" id="crimeFinancialBar" style="width:0%; background: linear-gradient(90deg, #ef4444, #f87171);"></div></div>
+                                    </div>
+                                    <div class="crime-type">
+                                        <div class="crime-type-header">
+                                            <span class="crime-type-icon" style="color: #f59e0b;">🔍</span>
+                                            <span>Identity Theft</span>
+                                            <span class="crime-type-count" id="crimeIdentity">0</span>
+                                        </div>
+                                        <div class="crime-type-bar"><div class="crime-type-fill" id="crimeIdentityBar" style="width:0%; background: linear-gradient(90deg, #f59e0b, #eab308);"></div></div>
+                                    </div>
+                                    <div class="crime-type">
+                                        <div class="crime-type-header">
+                                            <span class="crime-type-icon" style="color: #8b5cf6;">💳</span>
+                                            <span>Card Skimming</span>
+                                            <span class="crime-type-count" id="crimeCard">0</span>
+                                        </div>
+                                        <div class="crime-type-bar"><div class="crime-type-fill" id="crimeCardBar" style="width:0%; background: linear-gradient(90deg, #8b5cf6, #a78bfa);"></div></div>
+                                    </div>
+                                    <div class="crime-type">
+                                        <div class="crime-type-header">
+                                            <span class="crime-type-icon" style="color: #06b6d4;">💰</span>
+                                            <span>Money Laundering</span>
+                                            <span class="crime-type-count" id="crimeLaundering">0</span>
+                                        </div>
+                                        <div class="crime-type-bar"><div class="crime-type-fill" id="crimeLaunderingBar" style="width:0%; background: linear-gradient(90deg, #06b6d4, #22d3ee);"></div></div>
+                                    </div>
+                                    <div class="crime-type">
+                                        <div class="crime-type-header">
+                                            <span class="crime-type-icon" style="color: #10b981;">✓</span>
+                                            <span>Legitimate</span>
+                                            <span class="crime-type-count" id="crimeLegit">0</span>
+                                        </div>
+                                        <div class="crime-type-bar"><div class="crime-type-fill" id="crimeLegitBar" style="width:0%; background: linear-gradient(90deg, #10b981, #34d399);"></div></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Spatio-Temporal Evidence Dossier Card & Dilemma Box -->
+                    <div class="banking-dossier-card" id="bankingDossierCard">
+                        <div class="dossier-header-bar">
+                            <div class="dossier-title-wrap">
+                                <span style="font-size:1.15rem;" id="dosIcon">🛡️</span>
+                                <div>
+                                    <div style="font-size:0.92rem; font-weight:800; color:#fff;" id="dosTitle">Verified Everyday Purchase</div>
+                                    <div style="font-size:0.72rem; color:var(--text-muted);" id="dosCardholder">Cardholder: David Miller (Account: •••• 4128) | Home: New York, NY</div>
+                                </div>
+                            </div>
+                            <span class="dossier-pill pill-legit" id="dosPill">FRICTIONLESS PASS-THROUGH</span>
+                        </div>
+
+                        <!-- Dossier Telemetry Grid -->
+                        <div class="dossier-grid">
+                            <div class="dossier-box">
+                                <div class="dossier-label">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                                    Geo-Location & Travel Speed
+                                </div>
+                                <div class="dossier-val" id="dosGeo">Local (Manhattan, NY) — 1.2 km from Home</div>
+                                <div class="dossier-subval" id="dosSpeed">Speed: 0 km/h | Time Delta: 24h since last tx <span class="val-safe">[NORMAL]</span></div>
+                            </div>
+                            <div class="dossier-box">
+                                <div class="dossier-label">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+                                    Terminal & Device Fingerprint
+                                </div>
+                                <div class="dossier-val" id="dosDevice">iPhone 15 Pro (Hardware Face-ID Token)</div>
+                                <div class="dossier-subval" id="dosTerminal">EMV Chip Verified | MCC: 5411 Groceries <span class="val-safe">[MATCHED]</span></div>
+                            </div>
+                            <div class="dossier-box">
+                                <div class="dossier-label">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                    Transaction Velocity & Burst
+                                </div>
+                                <div class="dossier-val" id="dosVelocity">1 transaction / 24 hours</div>
+                                <div class="dossier-subval" id="dosVelocitySub">Normal weekday consumer rhythm <span class="val-safe">[BASELINE OK]</span></div>
+                            </div>
+                            <div class="dossier-box">
+                                <div class="dossier-label">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M8 12h8"/><path d="M12 8v8"/></svg>
+                                    PCA Latent Space Signature
+                                </div>
+                                <div class="dossier-val" id="dosPca">V1..V28 in standard bounds [-0.3, +0.4]</div>
+                                <div class="dossier-subval" id="dosPcaSub">Gaussian Z-scores within ±0.4σ of mean <span class="val-safe">[CLEAN]</span></div>
+                            </div>
+                        </div>
+
+                        <!-- The Real Banking Dilemma: Why a Human / Static Rule Fails vs Why AI Catches It -->
+                        <div class="bank-dilemma-card">
+                            <div class="dilemma-header">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                                <span>The Real Banking Dilemma — Why Simple Rules / Humans Fail vs Why AI is Required</span>
+                            </div>
+                            <div class="dilemma-row">
+                                <div class="dilemma-box dilemma-box-fail">
+                                    <span class="dilemma-tag tag-fail">❌ Why Static Rules / Human Fails:</span>
+                                    <span id="dosRuleFail">If banks used crude static rules (e.g. block any charge over $40 or unknown stores), legitimate cardholders would be falsely declined. False declines cause $443B in lost merchant sales and customer churn!</span>
+                                </div>
+                                <div class="dilemma-box dilemma-box-ai">
+                                    <span class="dilemma-tag tag-ai">⚡ How SentinelX XGBoost AI Solves It:</span>
+                                    <span id="dosAiWin">SentinelX correlates 28 PCA dimensions simultaneously with behavioral velocity in 12ms, detecting authentic stability and granting zero-friction instant pass-through approval.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Payment Verification Journey Pipeline (Flow) -->
+                    <div id="paymentFlowSection" class="payment-flow-card">
+                        <div class="flow-card-header">
+                            <div class="flow-card-title">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                                <span>Live Payment Security Flow</span>
+                            </div>
+                            <span class="flow-status-pill" id="flowStatusPill">5 Verification Stages</span>
+                        </div>
+                        <div class="flow-timeline" id="flowTimeline">
+                            <!-- Populated dynamically by app.js on selection / submit -->
+                        </div>
+                    </div>
+
+                    <!-- Technical Specification Card -->
+                    <div class="engine-specs-card">
+                        <div class="spec-row">
+                            <span class="spec-label">Inference Model:</span>
+                            <span class="spec-val"><span class="status-dot online"></span> XGBoost v1.0 Ensemble</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Feature Vector:</span>
+                            <span class="spec-val">28 Latent PCA Dimensions + Amount</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Latency SLA:</span>
+                            <span class="spec-val val-safe">&lt; 15 ms (Sub-second SOC)</span>
+                        </div>
+                        <div class="spec-row">
+                            <span class="spec-label">Decision Boundary:</span>
+                            <span class="spec-val">Classification Threshold: 0.50</span>
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            <!-- Live Decision Log Table -->
+            <section class="panel table-panel">
+                <div class="panel-header">
+                    <div class="panel-title">
+                        <span class="panel-dot pulse-green"></span>
+                        Live Cyber Threat Intelligence Feed
+                    </div>
+                    <div class="live-indicator">
+                        <span class="live-ping"></span>
+                        <span class="live-text">LIVE</span>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table class="data-table">
+                        <thead>
                             <tr>
-                                <th class="px-6 py-3">ID</th>
-                                <th class="px-6 py-3">Amount</th>
-                                <th class="px-6 py-3">Probability</th>
-                                <th class="px-6 py-3">Action</th>
+                                <th>Event ID</th>
+                                <th>Cardholder & Origin</th>
+                                <th>Amount</th>
+                                <th>Real-World Telemetry & Velocity</th>
+                                <th>Threat Score</th>
+                                <th>Detected Crime Vector</th>
+                                <th>Bank Action</th>
+                                <th>Forensic Dossier</th>
                             </tr>
                         </thead>
-                        <tbody id="tableBody" class="divide-y divide-slate-700">
-                            </tbody>
+                        <tbody id="tableBody">
+                            <tr class="empty-row">
+                                <td colspan="8">No live cyber events analyzed yet. Select a cyber attack or defense vector above to evaluate.</td>
+                            </tr>
+                        </tbody>
                     </table>
                 </div>
-            </div>
+            </section>
 
         </div>
-    </div> <footer class="mt-12 text-center pb-6 fade-in" style="animation-delay: 0.3s;">
-        <p class="text-sm text-slate-500 tracking-wider">
-            Engineered & Developed by <span class="text-blue-400 font-semibold tracking-normal">Mayank Vispute</span>
-        </p>
+
+        <!-- ========================================== -->
+        <!-- VIEW 2: BATCH CSV FORENSIC AUDIT           -->
+        <!-- ========================================== -->
+        <div id="viewBatchAudit" class="view-section">
+            <div class="batch-audit-container">
+
+                <!-- Header Banner -->
+                <div class="audit-header">
+                    <div class="audit-title-wrap">
+                        <h2>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                            Cyber Crime Batch Forensic Audit & Dataset Analyzer
+                        </h2>
+                        <p>Upload <code style="color:#06b6d4; font-family:var(--font-mono)">creditcard.csv</code> or download our verified cyber crime benchmark CSV to test detection precision, crime categorization, and financial loss prevention.</p>
+                    </div>
+                    <div class="audit-header-actions">
+                        <button class="btn-sample" onclick="loadSampleCreditCardCsv()">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            ⚡ Run Instant 100-Transaction Audit (with 35 Real Cyber Frauds)
+                        </button>
+                        <a href="SentinelX_CyberCrime_Test_Dataset.csv" download="SentinelX_CyberCrime_Test_Dataset.csv" class="btn-download-csv">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            ⬇️ Download Test CSV File (with 35 Real Frauds)
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Dataset Insight Notice for User & Professor -->
+                <div class="dataset-insight-box">
+                    <div class="insight-icon">💡</div>
+                    <div class="insight-text">
+                        <strong>Why do raw Kaggle datasets seem approved?</strong> In real-world banking datasets (<code style="color:#06b6d4;">creditcard.csv</code>), fraud is very rare (only 0.17% of total volume, 492 frauds in 284,807 rows), so the first 500 rows are all normal transactions. SentinelX includes an intelligent forensic sampler: whether you click the instant benchmark or upload your own dataset, it extracts real cyber crime instances so you can demonstrate genuine detection, intercepted dollar losses, and crime categorization to your evaluator!
+                    </div>
+                </div>
+
+                <!-- Drag and Drop Upload Area -->
+                <div class="drop-zone" id="dropZone" onclick="document.getElementById('csvFileInput').click()">
+                    <input type="file" id="csvFileInput" accept=".csv" style="display: none;" onchange="handleCsvFile(this.files[0])">
+                    <div class="drop-zone-icon">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    </div>
+                    <div class="drop-zone-title" id="dropZoneTitle">Drag & Drop <span style="color:#06b6d4;">creditcard.csv</span> or our downloaded test CSV here</div>
+                    <div class="drop-zone-sub">Supports Kaggle Credit Card Fraud dataset format (Time, V1..V28, Amount, optional Class)</div>
+                    <div class="drop-zone-actions">
+                        <span style="font-size:0.8rem; color:var(--text-muted);">or click the instant benchmark button above to audit immediately</span>
+                    </div>
+                </div>
+
+                <!-- Batch Audit KPI Summary (Hidden until run) -->
+                <div class="audit-kpis" id="auditKpis" style="display: none;">
+                    <div class="audit-kpi-card audit-kpi-blue">
+                        <span class="audit-kpi-label">Transactions Audited</span>
+                        <span class="audit-kpi-val" id="bKpiTotal">0</span>
+                    </div>
+                    <div class="audit-kpi-card audit-kpi-red">
+                        <span class="audit-kpi-label">Cyber Threats Detected</span>
+                        <span class="audit-kpi-val" style="color:#ef4444;" id="bKpiFraud">0</span>
+                    </div>
+                    <div class="audit-kpi-card audit-kpi-green">
+                        <span class="audit-kpi-label">Legitimate Cleared</span>
+                        <span class="audit-kpi-val" style="color:#10b981;" id="bKpiLegit">0</span>
+                    </div>
+                    <div class="audit-kpi-card audit-kpi-purple">
+                        <span class="audit-kpi-label">Ground Truth Match</span>
+                        <span class="audit-kpi-val" style="color:#a78bfa;" id="bKpiAccuracy">—</span>
+                    </div>
+                    <div class="audit-kpi-card audit-kpi-amber">
+                        <span class="audit-kpi-label">Exposure Intercepted</span>
+                        <span class="audit-kpi-val" style="color:#f59e0b;" id="bKpiAmount">$0</span>
+                    </div>
+                </div>
+
+                <!-- Controls Bar (Filter, Search, Export) -->
+                <div class="audit-controls" id="auditControls" style="display: none;">
+                    <div class="audit-filters">
+                        <button class="filter-btn active" onclick="filterAuditTable('all', this)" id="btnFilterAll">All Records (0)</button>
+                        <button class="filter-btn" onclick="filterAuditTable('fraud', this)" id="btnFilterFraud">🚨 Threats Only (0)</button>
+                        <button class="filter-btn" onclick="filterAuditTable('legit', this)" id="btnFilterLegit">🛡️ Legitimate Only (0)</button>
+                    </div>
+                    <div style="display: flex; gap: 0.8rem; align-items: center;">
+                        <input type="text" id="auditSearchInput" class="audit-search-input" placeholder="Search row, amount, vector..." onkeyup="searchAuditTable()">
+                        <button class="btn-export" onclick="exportAuditReportCsv()">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                            Export Audit CSV
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Audit Results Table -->
+                <div class="panel table-panel">
+                    <div class="panel-header">
+                        <div class="panel-title">
+                            <span class="panel-dot pulse-cyan"></span>
+                            Forensic Threat Audit Register
+                        </div>
+                        <span id="auditTableStatus" style="font-size:0.85rem; color:var(--text-muted);">Ready for audit</span>
+                    </div>
+                    <div class="table-container">
+                        <table class="data-table" id="auditDataTable">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Time</th>
+                                    <th>Amount</th>
+                                    <th>Threat Probability</th>
+                                    <th>Detected Crime Vector</th>
+                                    <th>Verdict & Action</th>
+                                    <th>Ground Truth (Class)</th>
+                                    <th>Forensic Indicator</th>
+                                    <th>Payment Flow</th>
+                                </tr>
+                            </thead>
+                            <tbody id="auditTableBody">
+                                <tr class="empty-row">
+                                    <td colspan="9">Upload a CSV or click "Load 100-Transaction Test Sample" above to run the batch audit.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Forensic Flow Inspector Modal -->
+    <div id="forensicModal" class="modal-overlay hidden" onclick="closeFlowModal(event)">
+        <div class="modal-dialog" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-badge" id="mBadge">TX #0</span>
+                    <h3 class="modal-title" id="mTitle">Transaction Forensic Flow Inspector</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeFlowModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Summary Pills -->
+                <div class="modal-kpi-grid">
+                    <div class="m-kpi-item">
+                        <span class="m-kpi-label">Transaction Amount</span>
+                        <span class="m-kpi-val" id="mAmount">$0.00</span>
+                    </div>
+                    <div class="m-kpi-item">
+                        <span class="m-kpi-label">AI Threat Score</span>
+                        <span class="m-kpi-val" id="mProb">0.0%</span>
+                    </div>
+                    <div class="m-kpi-item">
+                        <span class="m-kpi-label">Verdict & Action</span>
+                        <span class="m-kpi-val" id="mAction">PENDING</span>
+                    </div>
+                    <div class="m-kpi-item">
+                        <span class="m-kpi-label">Ground Truth</span>
+                        <span class="m-kpi-val" id="mGroundTruth">—</span>
+                    </div>
+                </div>
+
+                <!-- Flow Pipeline Diagram -->
+                <div class="modal-section-title">Payment Security Pipeline Stages:</div>
+                <div class="modal-flow-pipeline" id="mPipeline"></div>
+
+                <!-- Deep Dive Rationale -->
+                <div class="modal-rationale-box">
+                    <div class="rationale-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+                        <span id="mRationaleTitle">Why was this transaction processed this way?</span>
+                    </div>
+                    <p class="rationale-content" id="mRationaleContent"></p>
+                </div>
+
+                <!-- Explainer for Sir -->
+                <div class="modal-sir-box">
+                    <div class="sir-explain-header">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+                        <span>What to tell your Professor / Sir about this transaction:</span>
+                    </div>
+                    <p class="sir-explain-text" id="mSirText"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- MODAL: WHY BANKS NEED AI (VIVA & DEFENSE ARCHITECTURE GUIDE) -->
+    <!-- ============================================================ -->
+    <div id="whyAiModal" class="modal-overlay hidden" onclick="closeWhyAiModal(event)">
+        <div class="modal-dialog viva-modal-dialog" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-title-wrap">
+                    <span class="modal-badge" style="background:rgba(139,92,246,0.25); color:#c4b5fd; border:1px solid rgba(139,92,246,0.4);">🎓 VIVA & EVALUATOR GUIDE</span>
+                    <h3 class="modal-title">Why Real-World Banks Require Machine Learning (AI)</h3>
+                </div>
+                <button class="modal-close-btn" onclick="closeWhyAiModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+
+                <!-- Hero Box -->
+                <div class="viva-hero">
+                    <div class="viva-hero-title">The Fundamental Question: "Why can't a simple IF-statement or human teller do this?"</div>
+                    <p class="viva-hero-desc">
+                        A layperson or young student might say: <em>"If someone does theft or money laundering, it is obviously a scam, so just block it!"</em>
+                        In reality, <strong>cyber criminals never label their packets as 'theft'</strong>. A skimmed card looks mathematically identical to an authentic card, enters with a valid PIN, and processes in 15 milliseconds. Here is why modern global banks cannot survive without machine learning:
+                    </p>
+                </div>
+
+                <!-- 3-Way Architectural Comparison Table -->
+                <div class="modal-section-title">Architectural Showdown: Static Rules vs Human Teller vs SentinelX XGBoost</div>
+                <div class="viva-table-wrap">
+                    <table class="viva-table">
+                        <thead>
+                            <tr>
+                                <th>Evaluation Dimension</th>
+                                <th>Static IF/ELSE Rules</th>
+                                <th>Human Bank Teller / SOC Analyst</th>
+                                <th class="th-highlight">SentinelX XGBoost ML Engine</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Inference Latency</strong></td>
+                                <td><span style="color:#34d399;">&lt; 1 ms</span> (Fast)</td>
+                                <td><span style="color:#ef4444;">3 to 5 minutes</span> (Too slow for live POS)</td>
+                                <td class="td-highlight">12 to 25 ms (Real-Time Authorization)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Feature Capacity</strong></td>
+                                <td><span style="color:#ef4444;">1 to 2 fixed thresholds</span></td>
+                                <td><span style="color:#f59e0b;">2 to 3 variables</span> max at a time</td>
+                                <td class="td-highlight">28 PCA Latent Dimensions + Velocity Vectors</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Evasive Structuring (Smurfing)</strong></td>
+                                <td><span style="color:#ef4444;">Bypassed</span> (e.g. $9,850 dodges $10,000 rule)</td>
+                                <td><span style="color:#ef4444;">Missed</span> (Looks like normal wire)</td>
+                                <td class="td-highlight">Detected (Isolates non-linear clustering)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Impossible Travel Clones</strong></td>
+                                <td><span style="color:#ef4444;">Missed</span> (PIN was entered correctly)</td>
+                                <td><span style="color:#ef4444;">No global memory</span> across foreign ATMs</td>
+                                <td class="td-highlight">Intercepted (Spatio-temporal geodetic velocity)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>False Decline Cost ($)</strong></td>
+                                <td><span style="color:#ef4444;">Severe ($443B lost sales)</span></td>
+                                <td><span style="color:#f59e0b;">High friction / Long customer queues</span></td>
+                                <td class="td-highlight">Frictionless 3DS2 Approval for genuine users</td>
+                            </tr>
+                            <tr>
+                                <td><strong>System Throughput</strong></td>
+                                <td>High, but blind to new patterns</td>
+                                <td><span style="color:#ef4444;">~20 transactions / hour</span></td>
+                                <td class="td-highlight">65,000+ transactions / second (Visa scale)</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- 4 Real-World Banking Dilemmas -->
+                <div class="modal-section-title">The 4 Core Realities of Cyber-Financial Crime:</div>
+                <div class="viva-dilemma-grid">
+                    <div class="viva-card">
+                        <div class="viva-card-title">
+                            <span>1. The Invisible Attacker (Zero Labeling)</span>
+                        </div>
+                        <div class="viva-card-body">
+                            Bad actors deliberately disguise their payloads. A cloned card swipe in Bucharest arrives with the cardholder's genuine account number and correct PIN. There is no flag indicating a crime. Only non-linear machine learning correlating the terminal distance, elapsed time, and magnetic track degradation (PCA V14) reveals the fraud.
+                        </div>
+                    </div>
+                    <div class="viva-card">
+                        <div class="viva-card-title">
+                            <span>2. The 15-Millisecond Deadline</span>
+                        </div>
+                        <div class="viva-card-body">
+                            Global card schemes (Visa/Mastercard) mandate that a point-of-sale terminal must receive an authorization decision within 150 milliseconds. A human fraud analyst cannot read a customer file in 150ms. An automated machine learning model evaluates 30 mathematical features and returns a risk score in 12ms.
+                        </div>
+                    </div>
+                    <div class="viva-card">
+                        <div class="viva-card-title">
+                            <span>3. The $443 Billion False Decline Nightmare</span>
+                        </div>
+                        <div class="viva-card-body">
+                            If a bank writes crude rules ("block all charges over $100" or "block all foreign travel"), they will decline millions of legitimate shoppers and vacationers. False declines cost retailers $443 Billion annually in lost revenue and cause 32% of cardholders to abandon the card forever. AI delivers high fraud catch rates while preserving frictionless pass-through for legitimate customers.
+                        </div>
+                    </div>
+                    <div class="viva-card">
+                        <div class="viva-card-title">
+                            <span>4. Evasive Smurfing & Threshold Circumvention</span>
+                        </div>
+                        <div class="viva-card-body">
+                            Anti-Money Laundering (AML) law requires banks to file Currency Transaction Reports (CTR) for transactions &ge; $10,000. Criminal syndicates intentionally break money into transfers of $9,850 ("smurfing") across mule accounts. A simple static check looking for &ge; $10,000 is 100% bypassed. Machine learning detects structural dispersion and rapid velocity regardless of ticket size.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real Banking & Cyber Crime Glossary -->
+                <div class="modal-section-title">Real Banking & Cyber Crime Terminology Glossary:</div>
+                <div class="viva-glossary-grid">
+                    <div class="glossary-item">
+                        <div class="glossary-term">
+                            <span>📍 Impossible Travel (Geodetic Velocity)</span>
+                            <span class="why-ai-badge">Velocity Vector</span>
+                        </div>
+                        <div class="glossary-desc">
+                            When two consecutive transactions or logins occur at locations separated by distances that would require travel speeds exceeding commercial flight (&gt; 900 km/h), flagging card cloning or credential sharing.
+                        </div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">
+                            <span>🤖 Carding & BIN Enumeration</span>
+                            <span class="why-ai-badge">Botnet Attack</span>
+                        </div>
+                        <div class="glossary-desc">
+                            Automated scripts sending hundreds of micro-transactions ($0.50, $0.99) through merchant gateways to test whether stolen credit card numbers, CVVs, and expiration dates are active.
+                        </div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">
+                            <span>📱 Behavioral Biometrics</span>
+                            <span class="why-ai-badge">Passive Auth</span>
+                        </div>
+                        <div class="glossary-desc">
+                            Tracking how a user interacts with their device—keystroke intervals, typing cadence, and mouse movement dynamics—to catch session hijacking even when credentials are valid.
+                        </div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">
+                            <span>💰 Structuring & Smurfing</span>
+                            <span class="why-ai-badge">AML Evasion</span>
+                        </div>
+                        <div class="glossary-desc">
+                            Deliberately breaking large funds into smaller transactions (e.g. $9,850) across multiple mule accounts to evade the mandatory $10,000 Bank Secrecy Act (BSA) Currency Transaction Report (CTR).
+                        </div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">
+                            <span>🛡️ 3DS 2.0 (Frictionless vs SCA Step-Up)</span>
+                            <span class="why-ai-badge">EMVCo Protocol</span>
+                        </div>
+                        <div class="glossary-desc">
+                            Low-risk transactions (&lt;20%) achieve frictionless instant checkout with 0 delays. Borderline transactions (20%–79%) prompt Strong Customer Authentication (SCA) via Face-ID or OTP.
+                        </div>
+                    </div>
+                    <div class="glossary-item">
+                        <div class="glossary-term">
+                            <span>🚨 SAR (Suspicious Activity Report)</span>
+                            <span class="why-ai-badge">Regulatory Escalation</span>
+                        </div>
+                        <div class="glossary-desc">
+                            A confidential regulatory filing submitted by financial institutions to government enforcement agencies (FinCEN / FIU) upon detecting suspicious transaction patterns.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Viva / Professor Q&A Guide -->
+                <div class="modal-section-title">Top 4 Viva Questions & Answers to Impress Your Professor:</div>
+                <div style="display:flex; flex-direction:column; gap:0.75rem;">
+                    <div class="modal-sir-box">
+                        <div class="sir-explain-header">
+                            <span style="font-weight:800; color:#c4b5fd;">Q1: "Why are PCA features (V1 to V28) anonymized instead of using raw card details?"</span>
+                        </div>
+                        <p class="sir-explain-text">
+                            <strong>Answer:</strong> "Sir, under PCI-DSS and GDPR compliance, raw cardholder PANs and personal identifiable information (PII) cannot be stored in cleartext. Principal Component Analysis (PCA) performs dimensionality reduction and anonymization, transforming correlated variables into 28 orthogonal eigenvectors that preserve mathematical variance without compromising cardholder privacy."
+                        </p>
+                    </div>
+                    <div class="modal-sir-box">
+                        <div class="sir-explain-header">
+                            <span style="font-weight:800; color:#c4b5fd;">Q2: "Why did you choose XGBoost instead of a Deep Neural Network?"</span>
+                        </div>
+                        <p class="sir-explain-text">
+                            <strong>Answer:</strong> "Sir, gradient boosted decision trees (XGBoost) consistently outperform deep neural networks on tabular financial data. XGBoost excels at handling extreme class imbalance (0.17% fraud in creditcard.csv), provides sub-20ms inference latency required for payment gateways, and enables tree-based feature interpretability (SHAP values) for regulatory audits."
+                        </p>
+                    </div>
+                    <div class="modal-sir-box">
+                        <div class="sir-explain-header">
+                            <span style="font-weight:800; color:#c4b5fd;">Q3: "How does SentinelX handle the trade-off between fraud detection and false declines?"</span>
+                        </div>
+                        <p class="sir-explain-text">
+                            <strong>Answer:</strong> "Sir, rather than using a binary 0/1 rule, SentinelX computes continuous probability scores. Transactions under 20% receive frictionless approval; 20%-79% trigger 3DS 2.0 step-up authentication (push OTP) without declining genuine users; and only high-confidence threats (&ge;80%) suffer a hard block, saving banks from the $443B annual false decline trap."
+                        </p>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <p class="footer-text">
+                Engineered & Developed by <span class="footer-author">Mayank Vispute</span>
+            </p>
+            <p class="footer-sub">SentinelX Cyber Crime Analysis Engine — Powered by XGBoost ML & FastAPI</p>
+        </div>
     </footer>
 
-    <script src="app.js"></script>
+    <script src="app.js?v=3.5"></script>
 </body>
 </html>

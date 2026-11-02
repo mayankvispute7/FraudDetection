@@ -7,9 +7,21 @@ env/
 # Python Cache
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
 # Database
 sentinelx_postgres_data/
+*.db
+sentinelx.db
+*.sqlite
+*.sqlite3
+
+# Large Datasets (> 100MB cannot be pushed to GitHub)
+ml_pipeline/creditcard.csv
+*.csv.gz
+creditcard.csv
 
 # OS Files
 .DS_Store
+Thumbs.db

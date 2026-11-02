@@ -1,0 +1,13 @@
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+.env
+ml_pipeline/creditcard.csv
+ml_pipeline/train_model.py
+frontend/
+load_test.py
+*.md

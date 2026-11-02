@@ -1,6 +1,9 @@
 # app/main.py
+import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from slowapi.errors import RateLimitExceeded
 from slowapi import _rate_limit_exceeded_handler
 
@@ -28,8 +31,21 @@ app.add_middleware(
 # Initialize JSON Logs
 configure_logging()
 
+# Mount API endpoints (/predict, /predict/batch, /metrics, /drift-metrics)
 app.include_router(router)
 
-@app.get("/")
-async def root():
-    return {"message": "SentinelX Enterprise API is online."}
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy", "message": "SentinelX Enterprise API is online."}
+
+# Serve Frontend Static Assets if available (for 1-click cloud deployment on Render/Railway/Docker)
+if os.path.isdir("frontend"):
+    @app.get("/")
+    async def serve_index():
+        return FileResponse(os.path.join("frontend", "index.html"))
+
+    app.mount("/", StaticFiles(directory="frontend", html=True), name="frontend")
+else:
+    @app.get("/")
+    async def root():
+        return {"message": "SentinelX Enterprise API is online."}
