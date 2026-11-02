@@ -3,14 +3,125 @@
 // Frontend Application Logic & Batch Forensic Audit
 // =============================================
 
-// Automatically detect backend API URL:
-// - If running via standalone frontend dev server on port 5000, call backend on :8000
-// - In production (Render, Railway, Hugging Face, etc.) or when served by FastAPI, use window.location.origin
-const API_URL = (typeof window !== "undefined" && window.location.port === "5000")
-    ? "http://localhost:8000"
-    : (typeof window !== "undefined" && window.location.origin ? window.location.origin : "http://localhost:8000");
+// Resilient API Target Resolution:
+// Handles local file://, dev servers (5000, 5500, 3000), unified FastAPI, and cloud domains (Render/Railway).
+function resolveInitialApiUrl() {
+    try {
+        const stored = localStorage.getItem('sentinelx_api_url');
+        if (stored && stored.trim() && !stored.startsWith('file:') && stored !== 'null') {
+            return stored.trim().replace(/\/+$/, '');
+        }
+    } catch (_) {}
 
+    if (typeof window !== 'undefined' && window.location) {
+        const protocol = window.location.protocol;
+        const hostname = window.location.hostname;
+        const port = window.location.port;
+        const origin = window.location.origin;
+
+        // If opened as local file:///
+        if (protocol === 'file:' || origin === 'null' || !origin || origin.startsWith('file:')) {
+            return 'http://127.0.0.1:8000';
+        }
+
+        // If running locally (localhost, 127.0.0.1)
+        if (hostname === 'localhost' || hostname === '127.0.0.1' || hostname === '0.0.0.0') {
+            if (port === '8000') return origin;
+            return 'http://127.0.0.1:8000';
+        }
+
+        // If running in cloud production (Render, Railway, custom domain)
+        if (origin && !origin.startsWith('file:') && origin !== 'null') {
+            return origin;
+        }
+    }
+
+    return 'http://127.0.0.1:8000';
+}
+
+let API_URL = resolveInitialApiUrl();
 const API_KEY = "prod-super-secret-key-999";
+
+// ===== API Configuration Modal Functions =====
+function openApiConfigModal() {
+    const modal = document.getElementById('apiConfigModal');
+    const input = document.getElementById('apiTargetInput');
+    const resultEl = document.getElementById('apiTestResult');
+    if (modal) modal.style.display = 'flex';
+    if (input) input.value = API_URL;
+    if (resultEl) resultEl.style.display = 'none';
+}
+
+function closeApiConfigModal() {
+    const modal = document.getElementById('apiConfigModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function setApiPreset(url) {
+    const input = document.getElementById('apiTargetInput');
+    if (input && url && !url.startsWith('file:') && url !== 'null') {
+        input.value = url.replace(/\/+$/, '');
+    }
+}
+
+async function testCurrentApiConfig() {
+    const input = document.getElementById('apiTargetInput');
+    const resultEl = document.getElementById('apiTestResult');
+    if (!input || !resultEl) return;
+
+    let target = input.value.trim().replace(/\/+$/, '');
+    if (!target) target = 'http://127.0.0.1:8000';
+
+    resultEl.style.display = 'block';
+    resultEl.style.background = 'rgba(6, 182, 212, 0.1)';
+    resultEl.style.color = '#38bdf8';
+    resultEl.style.border = '1px solid rgba(6, 182, 212, 0.3)';
+    resultEl.innerText = `Testing connection to ${target}...`;
+
+    const start = performance.now();
+    try {
+        let res = null;
+        try {
+            res = await fetch(`${target}/health`, { signal: AbortSignal.timeout(3500) });
+        } catch (_) {}
+        if (!res || !res.ok) {
+            res = await fetch(`${target}/`, { signal: AbortSignal.timeout(3500) });
+        }
+
+        if (res && res.ok) {
+            const ms = Math.round(performance.now() - start);
+            resultEl.style.background = 'rgba(16, 185, 129, 0.15)';
+            resultEl.style.color = '#34d399';
+            resultEl.style.border = '1px solid rgba(16, 185, 129, 0.4)';
+            resultEl.innerHTML = `✅ <strong>Connected!</strong> Ping: ${ms}ms &bull; Engine response verified.`;
+        } else {
+            throw new Error(`Server returned HTTP ${res ? res.status : 'error'}`);
+        }
+    } catch (err) {
+        resultEl.style.background = 'rgba(239, 68, 68, 0.15)';
+        resultEl.style.color = '#f87171';
+        resultEl.style.border = '1px solid rgba(239, 68, 68, 0.4)';
+        resultEl.innerHTML = `❌ <strong>Cannot reach ${target}</strong>: ${err.message}. Ensure backend uvicorn is running on port 8000.`;
+    }
+}
+
+function saveApiConfig() {
+    const input = document.getElementById('apiTargetInput');
+    if (!input) return;
+
+    let newUrl = input.value.trim().replace(/\/+$/, '');
+    if (!newUrl) newUrl = 'http://127.0.0.1:8000';
+
+    API_URL = newUrl;
+    try {
+        localStorage.setItem('sentinelx_api_url', API_URL);
+    } catch (_) {}
+
+    showAlert(`API target updated to: ${API_URL}`);
+    closeApiConfigModal();
+    checkApiStatus();
+    fetchMetrics();
+}
 
 let localTransactionHistory = [];
 let riskChartInstance = null;
@@ -144,23 +255,50 @@ function initCharts() {
 // ===== API Status Check =====
 async function checkApiStatus() {
     const statusEl = document.getElementById('apiStatus');
+    const statusDot = document.getElementById('apiStatusDot');
+    const statusText = document.getElementById('apiStatusText');
     if (!statusEl) return false;
-    try {
-        const res = await fetch(`${API_URL}/health`, { signal: AbortSignal.timeout(3000) });
-        if (res.ok) {
-            statusEl.innerHTML = '<span class="status-dot online"></span><span class="status-text">Engine Online</span>';
-            return true;
+
+    const ping = async (url) => {
+        try {
+            const r = await fetch(`${url}/health`, { signal: AbortSignal.timeout(2500) });
+            if (r.ok) return true;
+        } catch (_) {}
+        try {
+            const r2 = await fetch(`${url}/`, { signal: AbortSignal.timeout(2500) });
+            if (r2.ok) return true;
+        } catch (_) {}
+        return false;
+    };
+
+    let isOnline = await ping(API_URL);
+
+    // If default 127.0.0.1 failed, auto-try localhost (handles IPv6 binding)
+    if (!isOnline && API_URL.includes('127.0.0.1:8000')) {
+        const alt = API_URL.replace('127.0.0.1:8000', 'localhost:8000');
+        if (await ping(alt)) {
+            API_URL = alt;
+            isOnline = true;
         }
-    } catch (_) {}
-    try {
-        const res2 = await fetch(`${API_URL}/`, { signal: AbortSignal.timeout(3000) });
-        if (res2.ok) {
-            statusEl.innerHTML = '<span class="status-dot online"></span><span class="status-text">Engine Online</span>';
-            return true;
+    } else if (!isOnline && API_URL.includes('localhost:8000')) {
+        const alt = API_URL.replace('localhost:8000', '127.0.0.1:8000');
+        if (await ping(alt)) {
+            API_URL = alt;
+            isOnline = true;
         }
-    } catch (_) {}
-    statusEl.innerHTML = '<span class="status-dot offline"></span><span class="status-text">Engine Offline</span>';
-    return false;
+    }
+
+    if (isOnline) {
+        if (statusDot) statusDot.className = 'status-dot online';
+        if (statusText) statusText.innerText = 'Engine Online';
+        statusEl.setAttribute('title', `Connected to: ${API_URL} (Click to change)`);
+        return true;
+    } else {
+        if (statusDot) statusDot.className = 'status-dot offline';
+        if (statusText) statusText.innerText = 'Engine Offline';
+        statusEl.setAttribute('title', `Cannot reach: ${API_URL} (Click to configure)`);
+        return false;
+    }
 }
 
 // ===== Fetch Server Metrics =====
@@ -722,7 +860,8 @@ async function submitTransaction() {
         fetchMetrics();
 
     } catch (error) {
-        showAlert("Connection failed. Ensure backend API is online.");
+        console.error("Threat analysis error:", error);
+        showAlert(`⚠️ Connection failed to ${API_URL}. Click ⚙️ in the top bar to verify or update the backend URL.`);
     } finally {
         if (scanStatus) scanStatus.classList.add('hidden');
         btnSpinner.classList.add('hidden');
@@ -1116,16 +1255,36 @@ async function loadSampleCreditCardCsv() {
     const title = document.getElementById('dropZoneTitle');
     title.innerHTML = '⏳ Loading benchmark <span style="color:#06b6d4;">SentinelX_CyberCrime_Test_Dataset.csv</span>...';
 
-    try {
-        let res = await fetch('SentinelX_CyberCrime_Test_Dataset.csv');
-        if (!res.ok) {
-            res = await fetch('creditcard_test_sample.csv');
-        }
-        if (!res.ok) throw new Error("Could not load sample CSV");
-        const csvText = await res.text();
+    let csvText = null;
+    const candidates = [
+        'SentinelX_CyberCrime_Test_Dataset.csv',
+        'creditcard_test_sample.csv',
+        `${API_URL}/SentinelX_CyberCrime_Test_Dataset.csv`,
+        `${API_URL}/creditcard_test_sample.csv`
+    ];
+
+    for (const url of candidates) {
+        try {
+            const res = await fetch(url);
+            if (res.ok) {
+                const text = await res.text();
+                if (text && text.includes('Time,V1')) {
+                    csvText = text;
+                    break;
+                }
+            }
+        } catch (_) {}
+    }
+
+    // Offline / file:// Protocol Embedded Fallback
+    if (!csvText && typeof EMBEDDED_BENCHMARK_CSV !== 'undefined' && EMBEDDED_BENCHMARK_CSV) {
+        csvText = EMBEDDED_BENCHMARK_CSV;
+    }
+
+    if (csvText) {
         parseAndAuditCsv(csvText, "SentinelX_CyberCrime_Benchmark_Dataset.csv (35 Frauds)");
-    } catch (err) {
-        showAlert("Failed to load benchmark CSV: " + err.message);
+    } else {
+        showAlert("Failed to load benchmark CSV. Please drag & drop creditcard.csv manually.");
         title.innerHTML = 'Drag & Drop <span style="color:#06b6d4;">creditcard.csv</span> or our downloaded test CSV here';
     }
 }
@@ -1248,8 +1407,9 @@ async function processBatchTransactions(transactions, fileName) {
         renderBatchAudit(data);
 
     } catch (err) {
-        showAlert("Batch audit failed: " + err.message);
-        statusEl.innerText = "Audit failed";
+        console.error("Batch audit error:", err);
+        showAlert(`⚠️ Batch audit failed: Cannot reach backend at ${API_URL}. Ensure uvicorn is running on port 8000.`);
+        statusEl.innerText = "Audit failed: Backend unreachable";
     }
 }
 

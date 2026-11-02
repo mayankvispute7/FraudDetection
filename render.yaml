@@ -8,3 +8,4 @@ services:
     envVars:
       - key: SENTINELX_API_KEY
         value: prod-super-secret-key-999
+

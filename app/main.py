@@ -20,12 +20,14 @@ app = FastAPI(title="SentinelX Real-Time Fraud Engine", version="1.0")
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
+# Universal CORS: Supports local file://, localhost:5000, localhost:5500, and cloud deployments
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"], 
-    allow_credentials=True,
+    allow_credentials=False, 
     allow_methods=["*"], 
     allow_headers=["*"],
+    expose_headers=["*"],
 )
 
 # Initialize JSON Logs
@@ -36,7 +38,7 @@ app.include_router(router)
 
 @app.get("/health")
 async def health_check():
-    return {"status": "healthy", "message": "SentinelX Enterprise API is online."}
+    return {"status": "online", "message": "SentinelX Enterprise API is online."}
 
 # Serve Frontend Static Assets if available (for 1-click cloud deployment on Render/Railway/Docker)
 if os.path.isdir("frontend"):
@@ -48,4 +50,4 @@ if os.path.isdir("frontend"):
 else:
     @app.get("/")
     async def root():
-        return {"message": "SentinelX Enterprise API is online."}
+        return {"status": "online", "message": "SentinelX Enterprise API is online."}

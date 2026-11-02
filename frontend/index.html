@@ -45,9 +45,10 @@
         </div>
 
         <div class="nav-status">
-            <div class="status-indicator" id="apiStatus">
-                <span class="status-dot offline"></span>
-                <span class="status-text">Connecting...</span>
+            <div class="status-indicator" id="apiStatus" onclick="openApiConfigModal()" title="Click to view or change Backend API URL" style="cursor: pointer; user-select: none;">
+                <span class="status-dot offline" id="apiStatusDot"></span>
+                <span class="status-text" id="apiStatusText">Connecting...</span>
+                <span style="font-size: 0.75rem; margin-left: 4px; opacity: 0.75;">⚙️</span>
             </div>
             <div class="nav-badge">v1.0 — XGBoost Engine</div>
         </div>
@@ -892,6 +893,47 @@
         </div>
     </footer>
 
-    <script src="app.js?v=3.5"></script>
+    <!-- API Configuration Modal -->
+    <div id="apiConfigModal" class="modal-overlay" style="display:none;" onclick="if(event.target===this) closeApiConfigModal()">
+        <div class="modal-box" style="max-width: 520px;">
+            <div class="modal-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="font-size: 1.5rem;">⚙️</div>
+                    <div>
+                        <h2 style="font-size: 1.15rem; font-weight: 700; color: #fff;">Backend API Connection</h2>
+                        <p style="font-size: 0.8rem; color: #94a3b8;">Configure or test your SentinelX ML engine endpoint</p>
+                    </div>
+                </div>
+                <button class="modal-close" onclick="closeApiConfigModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem 0;">
+                <div>
+                    <label style="display: block; font-size: 0.8rem; font-weight: 600; color: #cbd5e1; margin-bottom: 0.35rem;">
+                        Target Backend URL
+                    </label>
+                    <input type="text" id="apiTargetInput" placeholder="http://127.0.0.1:8000" style="width: 100%; padding: 0.65rem 0.85rem; background: #0f172a; border: 1px solid #334155; border-radius: 8px; color: #22d3ee; font-family: monospace; font-size: 0.9rem;" />
+                    <p style="font-size: 0.75rem; color: #64748b; margin-top: 0.35rem;">
+                        If running locally, use <code>http://127.0.0.1:8000</code>. For live deployments (e.g. Render/Railway), enter your cloud URL (e.g. <code>https://your-app.onrender.com</code>).
+                    </p>
+                </div>
+                
+                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button type="button" onclick="setApiPreset('http://127.0.0.1:8000')" class="nav-tab" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">⚡ 127.0.0.1:8000</button>
+                    <button type="button" onclick="setApiPreset('http://localhost:8000')" class="nav-tab" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">⚡ localhost:8000</button>
+                    <button type="button" onclick="setApiPreset(window.location.origin)" class="nav-tab" style="font-size: 0.75rem; padding: 0.35rem 0.75rem;">🌐 Same Origin</button>
+                </div>
+
+                <div id="apiTestResult" style="padding: 0.65rem 0.85rem; border-radius: 8px; font-size: 0.8rem; display: none;"></div>
+
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 0.5rem;">
+                    <button type="button" onclick="testCurrentApiConfig()" class="sim-btn" style="padding: 0.6rem 1rem; border: 1px solid #334155;">🔍 Test Ping</button>
+                    <button type="button" onclick="saveApiConfig()" class="sim-btn sim-btn-primary" style="padding: 0.6rem 1.25rem;">💾 Save & Connect</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="benchmark_data.js"></script>
+    <script src="app.js?v=4.0"></script>
 </body>
 </html>

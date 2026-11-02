@@ -118,9 +118,29 @@ python -m http.server 5000 --directory frontend
 ```
 
 Now open your web browser and navigate to:
-👉 **`http://localhost:5000`**
+👉 **`http://127.0.0.1:5000`** or **`http://127.0.0.1:8000`**
 
-*(Alternatively, you can directly open `frontend/index.html` in any modern web browser).*
+*(Note: Always use `127.0.0.1` rather than `localhost` on Windows if Docker or WSL occupies the IPv6 loopback port).*
+
+---
+
+## 🌐 Deploying to the Cloud (Live Deployment)
+
+### Option A: Unified 1-Click Cloud Deployment (Render.com) — Recommended
+Both the frontend SOC dashboard and the FastAPI ML backend are served together on a single public URL.
+
+1. Create a free account at [Render.com](https://render.com) and connect your GitHub repo `mayankvispute7/FraudDetection`.
+2. Click **New +** > **Web Service**.
+3. Settings:
+   - **Environment**: `Python 3`
+   - **Build Command**: `pip install -r requirements.txt`
+   - **Start Command**: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`
+   - **Environment Variable**: `SENTINELX_API_KEY` = `prod-super-secret-key-999`
+4. Click **Deploy Web Service**. Your live URL (e.g. `https://your-app.onrender.com`) will host both the frontend dashboard and backend API with zero CORS friction!
+
+### Option B: Separate Frontend (Vercel) + Backend (Render)
+- **Backend on Render**: Deploy following Option A above, which provides your backend API URL (e.g. `https://sentinelx-api.onrender.com`).
+- **Frontend on Vercel**: Import the `frontend/` folder into Vercel as a Static Site. In the deployed dashboard, click the **⚙️ Engine Status** badge in the top navigation bar, enter your Render API URL, and click **Save & Connect**!
 
 ---
 
